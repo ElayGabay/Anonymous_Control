@@ -125,9 +125,9 @@ function FILE_CREATE() {
 	if [[ -z $(sudo find / -name Whois.txt) ]] &> /dev/null; 
 	then
         touch Whois.txt
-        sudo chmod +w Nmap.txt
+        sudo chmod +w Whois.txt
 	else 	
-		sudo chmod +w Nmap.txt
+		sudo chmod +w Whois.txt
     fi
 	LOG_MESSAGE "[@]File Whois.txt was created."
 	
