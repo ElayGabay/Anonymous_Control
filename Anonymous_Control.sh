@@ -149,15 +149,42 @@ function IP_SCAN() {
 #This function connects to a remote server using 'sshpass' and executes a specified command.
 function SSHPASS() {
 	
+	ip_sshpass="0.0.0.0"
+	user_name="kali"
+	password_ssh="kali"
+	max_retries=5
+	retry_count=0
 	
-    target_ip=$(sudo sshpass -p "kali" ssh -o StrictHostKeyChecking=no kali@0.0.0.0 "ifconfig eth0 | awk '/inet /{print \$2}'")
-    public_ip=$(sudo sshpass -p "kali" ssh -o StrictHostKeyChecking=no kali@0.0.0.0 "curl -s https://api.ipify.org")
-    target_country=$(sshpass -p "kali" ssh -o StrictHostKeyChecking=no kali@0.0.0.0 "curl -s https://ipwhois.app/json/$public_ip | grep -oP '(?<=\"country\":\")[^\"]+'")
+	#Checking if the connection is successful if not, exiting the script.
+	while [ $retry_count -lt $max_retries ]; 
+	do
+		your_ssh_command=$(sudo sshpass -p $password_ssh ssh -o StrictHostKeyChecking=no "$user_name@$ip_sshpass" "echo 'Connection successful'" 2>/dev/null)
+    
+		if [ $? -eq 0 ]; 
+		then
+			break
+		else
+			((retry_count++))
+		fi
+	done
+
+	if [ $retry_count -eq $max_retries ]; 
+	then
+		echo "Connection failed after $max_retries retries, exiting the script"
+		LOG_MESSAGE "[*]Conection to remote server via sshpass failed script is done"
+    exit 1 # Exit the script with a failure status (non-zero)
+	fi
+	
+	
+	
+    target_ip=$(sudo sshpass -p "$password_ssh" ssh -o StrictHostKeyChecking=no $user_name@$ip_sshpass "ifconfig eth0 | awk '/inet /{print \$2}'")
+    public_ip=$(sudo sshpass -p "$password_ssh" ssh -o StrictHostKeyChecking=no $user_name@$ip_sshpass "curl -s https://api.ipify.org")
+    target_country=$(sshpass -p "$password_ssh" ssh -o StrictHostKeyChecking=no $user_name@$ip_sshpass "curl -s https://ipwhois.app/json/$public_ip | grep -oP '(?<=\"country\":\")[^\"]+'")
 	
 	echo -e "\n"
     echo "[#] Connecting to the remote server..."
     LOG_MESSAGE "[#]Conecting to remote server via sshpass"
-	sudo sshpass -p "kali" ssh -o StrictHostKeyChecking=no kali@0.0.0.0 "echo '[*] The target IP address is: $target_ip'; echo '[*] The target country is: $target_country'; echo -n '[*] The Uptime is: '; uptime | tr '\n' ' '"
+	sudo sshpass -p "$password_ssh" ssh -o StrictHostKeyChecking=no $user_name@$ip_sshpass "echo '[*] The target IP address is: $target_ip'; echo '[*] The target country is: $target_country'; echo -n '[*] The Uptime is: '; uptime | tr '\n' ' '"
 	LOG_MESSAGE "[*]Sshpass remote server IP is :$target_ip"
     LOG_MESSAGE "[*]Sshpass remote server Public IP is :$public_ip"
     LOG_MESSAGE "[*]Sshpass remote server Country is :$target_country"
@@ -166,7 +193,7 @@ function SSHPASS() {
 	LOG_MESSAGE "[#]Conecting to remote server via sshpass"
 	echo -e "\n" 
 	echo "[#]Conectiong to sshpass victim's:"
-	sshpass -p "kali" ssh -o StrictHostKeyChecking=no kali@0.0.0.0 "whois $ip_target" >> Whois.txt 2>/dev/null
+	sshpass -p "$password_ssh" ssh -o StrictHostKeyChecking=no $user_name@$ip_sshpass "whois $ip_target" >> Whois.txt 2>/dev/null
 	echo "[@]The whois data store in: $(sudo find / -name Whois.txt 2>/dev/null)"
 	LOG_MESSAGE "[*]The who is target is :$ip_target"
 	LOG_MESSAGE	"[*]Sshpass conection is done."
@@ -174,7 +201,7 @@ function SSHPASS() {
 	LOG_MESSAGE "[#]Connecting to the victim's SSH and initiating the scan"
 	echo -e "\n" 
 	echo "[#]Conectiong to sshpass victim's and start scaning:"
-	sshpass -p "kali" ssh -o StrictHostKeyChecking=no kali@0.0.0.0 "nmap $ip_target" >> Nmap.txt 2>/dev/null
+	sshpass -p "$password_ssh" ssh -o StrictHostKeyChecking=no $user_name@$ip_sshpass "nmap $ip_target" >> Nmap.txt 2>/dev/null
 	echo "[@]The nmap data store in: $(sudo find / -name Nmap.txt 2>/dev/null)"
 	LOG_MESSAGE "[*]The scan target is :$ip_target"
 	LOG_MESSAGE "[*]Sshpass conection is done."
